@@ -3,7 +3,7 @@ import redis from 'redis';
 import bluebird from 'bluebird';
 import Sequelize from 'sequelize';
 import should from 'should';
-import SequelizeRedis from '..';
+import SequelizeRedis from '../index';
 
 runDotenv(); // to run with .env file for local env vars
 

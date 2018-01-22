@@ -3,7 +3,7 @@
   "author": "Idan Gozlan <idangozlan@gmail.com> (http://github.com/idangozlan)",
   "description": "A semi-automatic caching wrapper for Sequelize NodeJS framework",
   "homepage": "https://github.com/idangozlan/sequelize-redis",
-  "license": "MIT (Idan Gozlan)",
+  "license": "MIT",
   "version": "1.0.5",
   "main": "lib/index.js",
   "dependencies": {
@@ -15,7 +15,7 @@
     "babel-plugin-transform-runtime": "6.23.0",
     "babel-preset-env": "1.6.1",
     "babel-preset-stage-0": "6.24.1",
-    "babel-runtime": "6.26.0",
+    "babel-runtime": "^6.26.0",
     "better-npm-run": "0.1.0",
     "bluebird": "^3.5.1",
     "cross-env": "5.1.3",
