@@ -1,0 +1,46 @@
+{
+  "name": "sequelize-redis",
+  "author": "Idan Gozlan <idangozlan@gmail.com> (http://github.com/idangozlan)",
+  "description": "A semi-automatic caching wrapper for Sequelize NodeJS framework",
+  "homepage": "https://github.com/idangozlan/sequelize-redis",
+  "license": "MIT (Idan Gozlan)",
+  "version": "1.0.5",
+  "main": "lib/index.js",
+  "dependencies": {
+    "json-buffer": "^3.0.0"
+  },
+  "devDependencies": {
+    "babel-cli": "6.26.0",
+    "babel-eslint": "8.2.1",
+    "babel-plugin-transform-runtime": "6.23.0",
+    "babel-preset-env": "1.6.1",
+    "babel-preset-stage-0": "6.24.1",
+    "babel-runtime": "6.26.0",
+    "better-npm-run": "0.1.0",
+    "bluebird": "^3.5.1",
+    "cross-env": "5.1.3",
+    "dotenv": "^4.0.0",
+    "eslint": "4.15.0",
+    "eslint-config-airbnb-base": "12.1.0",
+    "eslint-loader": "1.9.0",
+    "eslint-plugin-import": "2.8.0",
+    "eslint-plugin-jsx-a11y": "6.0.3",
+    "mocha": "^5.0.0",
+    "mysql2": "^1.5.1",
+    "redis": "^2.8.0",
+    "sequelize": "^4.31.2",
+    "should": "^13.2.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/idangozlan/sequelize-redis.git"
+  },
+  "scripts": {
+    "build": "npm run clean:build && cross-env BABEL_ENV=es babel ./src --out-dir ./lib --ignore test.js",
+    "prepublish": "npm run build",
+    "clean:build": "rimraf lib",
+    "lint": "eslint -c .eslintrc . --fix",
+    "test": "mocha --require babel-register --timeout=15000 --require should src/test/**/*.js  --exit",
+    "update": "ncu -a -u -x \"\""
+  }
+}
