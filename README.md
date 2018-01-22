@@ -1,6 +1,8 @@
 # sequelize-redis
 [![Build Status](https://travis-ci.org/idangozlan/sequelize-redis.svg?branch=master)](https://travis-ci.org/idangozlan/sequelize-redis)
 [![codecov.io Code Coverage](https://img.shields.io/codecov/c/github/idangozlan/sequelize-redis.svg?maxAge=2592000)](https://codecov.io/github/idangozlan/sequelize-redis?branch=master)
+[![Known Vulnerabilities](https://snyk.io/test/github/idangozlan/sequelize-redis/badge.svg)](https://snyk.io/test/github/idangozlan/sequelize-redis)
+
 A semi-automatic caching wrapper for Sequelize v4 NodeJS framework
 
 ### Installation
