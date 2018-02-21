@@ -36,7 +36,7 @@ const sequelizeRedis = new SequelizeRedis(redisClient);
 
 2. Wrap our the Sequelize original model:
 ``` 
-// models.User refers to model of sequelieze
+// models.User refers to model of sequelize
 const User = sequelizeRedis.getModel(models.User, { ttl: 60 * 60 * 24 });
 ```
 The second argument of `getModel` is optional:
