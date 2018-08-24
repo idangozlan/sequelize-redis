@@ -127,6 +127,16 @@ describe('Sequelize-Redis-Cache', () => {
     user.get('username').should.equal('idan');
   });
 
+  it('should fetch users from database with raw:true option', async () => {
+    redisClient.del(cacheKey);
+    const [users, isCached] = await UserCacher.findAllCached(cacheKey, { raw: true });
+    should.exist(users);
+    users.length.should.equal(2);
+    isCached.should.equal(false);
+    users[0].username.should.equal('idan');
+    users[1].username.should.equal('idan2');
+  });
+
   it('should fetch user from database with cached Sequelize model with original method', async () => {
     const user = await UserCacher.findById(1);
     should.exist(user);

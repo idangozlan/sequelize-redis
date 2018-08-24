@@ -67,7 +67,7 @@ export default class SequelizeRedisModel {
             const buildOptions = {
               raw: !!queryOptions.raw || false,
               isNewRecord: !!queryOptions.isNewRecord || false,
-            }
+            };
             if (queryOptions.include) {
               buildOptions.include = queryOptions.include;
             }
