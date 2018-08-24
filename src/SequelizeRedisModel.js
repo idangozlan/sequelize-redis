@@ -89,7 +89,7 @@ export default class SequelizeRedisModel {
     let toCache;
     if (!result) {
       return [null, false];
-    } else if (Array.isArray(result) || result.rows || typeof result === 'number') {
+    } if (Array.isArray(result) || result.rows || typeof result === 'number') {
       // Array for findAll, result.rows for findAndCountAll, typeof number for count/max/sum/etc
       toCache = result;
     } else if (result.toString().includes(('[object SequelizeInstance'))) {
@@ -107,4 +107,3 @@ export default class SequelizeRedisModel {
     return [result, false];
   }
 }
-

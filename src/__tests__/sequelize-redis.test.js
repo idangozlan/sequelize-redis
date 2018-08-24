@@ -1,15 +1,9 @@
 import { config as runDotenv } from 'dotenv';
-import redis from 'redis';
-import bluebird from 'bluebird';
 import Sequelize from 'sequelize';
-import should from 'should';
+import redisClient from '../../jest/redisClient';
 import SequelizeRedis from '../index';
 
 runDotenv(); // to run with .env file for local env vars
-
-bluebird.promisifyAll(redis.RedisClient.prototype);
-bluebird.promisifyAll(redis.Multi.prototype);
-
 
 const db = {
   host: process.env.DB_HOST || 'localhost',
@@ -26,9 +20,6 @@ const sequelizeOpts = {
   operatorsAliases: Sequelize.Op,
 };
 
-const redisPort = process.env.REDIS_PORT || 6379;
-const redisHost = process.env.REDIS_HOST || '';
-
 /* global describe */
 /* global it */
 /* global before */
@@ -39,7 +30,6 @@ function onErr(err) {
 }
 
 describe('Sequelize-Redis-Cache', () => {
-  let redisClient;
   let sequelize;
   let User;
   let GitHubUser;
@@ -47,12 +37,7 @@ describe('Sequelize-Redis-Cache', () => {
   const cacheKey = 'test';
   const userTTL = 1; // seconds
 
-  before(async () => {
-    redisClient = redis.createClient({
-      host: redisHost,
-      prefix: 'test-sequelize-redis_',
-      port: redisPort,
-    });
+  beforeAll(async () => {
     redisClient.on('error', onErr);
 
     sequelize = new Sequelize(db.database, db.user, db.password, sequelizeOpts);
@@ -121,103 +106,126 @@ describe('Sequelize-Redis-Cache', () => {
     UserCacher = sequelizeCacher.getModel(User, { ttl: userTTL });
   });
 
+  afterAll(async () => {
+    await sequelize.close();
+  });
+
   it('should fetch user from database with original Sequelize model', async () => {
+    expect.assertions(1);
+
     const user = await User.findById(1);
-    should.exist(user);
-    user.get('username').should.equal('idan');
+    expect(user.get('username')).toEqual('idan');
   });
 
   it('should fetch users from database with raw:true option', async () => {
+    expect.assertions(3);
+
     redisClient.del(cacheKey);
     const [users, isCached] = await UserCacher.findAllCached(cacheKey, { raw: true });
-    should.exist(users);
-    users.length.should.equal(2);
-    isCached.should.equal(false);
-    users.toString().includes(('[object SequelizeInstance')).should.equal(false);
-    console.log(users);
+
+    expect(users.length).toEqual(2);
+    expect(isCached).toEqual(false);
+    expect(users.toString().includes(('[object SequelizeInstance'))).toEqual(false);
   });
 
   it('should fetch user from database with cached Sequelize model with original method', async () => {
+    expect.assertions(1);
+
     const user = await UserCacher.findById(1);
-    should.exist(user);
-    user.get('username').should.equal('idan');
+    expect(user.get('username')).toEqual('idan');
   });
 
   it('should fetch user from database', async () => {
+    expect.assertions(2);
+
     redisClient.del(cacheKey);
     const [user, isCached] = await UserCacher.findByIdCached(cacheKey, 1);
-    should.exist(user);
-    isCached.should.equal(false);
-    user.get('username').should.equal('idan');
+
+    expect(isCached).toEqual(false);
+    expect(user.get('username')).toEqual('idan');
   });
 
   it('should fetch user from cache', async () => {
+    expect.assertions(2);
+
     const [user, isCached] = await UserCacher.findByIdCached(cacheKey, 1);
-    should.exist(user);
-    isCached.should.equal(true);
-    user.get('username').should.equal('idan');
+
+    expect(isCached).toEqual(true);
+    expect(user.get('username')).toEqual('idan');
   });
 
-  it('should fetch user from database after ttl reached', async () => (new Promise((resolve, reject) => {
-    setTimeout(async () => {
-      const [user, isCached] = await UserCacher.findByIdCached(cacheKey, 1);
-      try {
-        should.exist(user);
-        isCached.should.equal(false);
-        user.get('username').should.equal('idan');
-      } catch (error) {
-        reject(error);
-      }
+  it('should fetch user from database after ttl reached', async () => (new Promise(async (resolve, reject) => {
+    expect.assertions(2);
 
-      return resolve();
-    }, (userTTL * 1000));
+    await (new Promise(resolveTimeout => setTimeout(resolveTimeout, userTTL * 1000)));
+    const [user, isCached] = await UserCacher.findByIdCached(cacheKey, 1);
+    try {
+      expect(isCached).toEqual(false);
+      expect(user.get('username')).toEqual('idan');
+    } catch (error) {
+      reject(error);
+    }
+
+    return resolve();
   })));
 
   it('should fetch empty res with not cached flag', async () => {
+    expect.assertions(2);
+
     const [user, isCached] = await UserCacher.findByIdCached('user_3', 3);
-    should.not.exist(user);
-    isCached.should.equal(false);
+    expect(user).toBe(null);
+    expect(isCached).toEqual(false);
   });
 
   it('should fetch users from db', async () => {
+    expect.assertions(4);
+
     redisClient.del(cacheKey);
     const [users, isCached] = await UserCacher.findAllCached(cacheKey);
-    should.exist(users);
-    users.length.should.equal(2);
-    isCached.should.equal(false);
-    users[0].get('username').should.equal('idan');
-    users[1].get('username').should.equal('idan2');
+
+    expect(users.length).toEqual(2);
+    expect(isCached).toEqual(false);
+    expect(users[0].get('username')).toEqual('idan');
+    expect(users[1].get('username')).toEqual('idan2');
   });
 
   it('should fetch users from cache', async () => {
+    expect.assertions(4);
+
     const [users, isCached] = await UserCacher.findAllCached(cacheKey);
-    should.exist(users);
-    users.length.should.equal(2);
-    isCached.should.equal(true);
-    users[0].get('username').should.equal('idan');
-    users[1].get('username').should.equal('idan2');
+
+    expect(users.length).toEqual(2);
+    expect(isCached).toEqual(true);
+    expect(users[0].get('username')).toEqual('idan');
+    expect(users[1].get('username')).toEqual('idan2');
   });
 
   it('should fetch users from db and spread associations into JSON', async () => {
+    expect.assertions(4);
+
     redisClient.del(cacheKey);
     const [users, isCached] = await UserCacher.findAllCached(cacheKey, { include: [GitHubUser] });
-    should.exist(users);
-    users.length.should.equal(2);
-    isCached.should.equal(false);
-    users[0].githubUser.username.should.equal('idangozlan');
-    users[0].githubUser.get('username').should.equal('idangozlan');
+
+    expect(users.length).toEqual(2);
+    expect(isCached).toEqual(false);
+    expect(users[0].githubUser.username).toEqual('idangozlan');
+    expect(users[0].githubUser.get('username')).toEqual('idangozlan');
   });
 
   it('should fetch users from cache with spreaded associations', async () => {
+    expect.assertions(4);
+
     const [users, isCached] = await UserCacher.findAllCached(cacheKey, { include: [GitHubUser] });
-    should.exist(users);
-    users.length.should.equal(2);
-    isCached.should.equal(true);
-    users[0].githubUser.username.should.equal('idangozlan');
-    users[0].githubUser.get('username').should.equal('idangozlan');
+
+    expect(users.length).toEqual(2);
+    expect(isCached).toEqual(true);
+    expect(users[0].githubUser.username).toEqual('idangozlan');
+    expect(users[0].githubUser.get('username')).toEqual('idangozlan');
   });
 
   it('should fetch user with includes from database', async () => {
+    expect.assertions(3);
+
     redisClient.del(cacheKey);
     const [user, isCached] = await UserCacher.findOneCached(cacheKey, {
       where: {
@@ -225,28 +233,28 @@ describe('Sequelize-Redis-Cache', () => {
       },
       include: [GitHubUser],
     });
-    isCached.should.equal(false);
-    should.exist(user);
-    should.exist(user.githubUser);
-    user.get('username').should.equal('idan');
-    user.githubUser.get('username').should.equal('idangozlan');
+    expect(isCached).toEqual(false);
+    expect(user.get('username')).toEqual('idan');
+    expect(user.githubUser.get('username')).toEqual('idangozlan');
   });
 
   it('should fetch user with includes from cache', async () => {
+    expect.assertions(3);
+
     const [user, isCached] = await UserCacher.findOneCached(cacheKey, {
       where: {
         id: 1,
       },
       include: [GitHubUser],
     });
-    isCached.should.equal(true);
-    should.exist(user);
-    should.exist(user.githubUser);
-    user.get('username').should.equal('idan');
-    user.githubUser.get('username').should.equal('idangozlan');
+    expect(isCached).toEqual(true);
+    expect(user.get('username')).toEqual('idan');
+    expect(user.githubUser.get('username')).toEqual('idangozlan');
   });
 
   it('should findAndCountAll from db', async () => {
+    expect.assertions(5);
+
     redisClient.del(cacheKey);
     const [res, isCached] = await UserCacher.findAndCountAllCached(cacheKey, {
       where: {
@@ -254,30 +262,32 @@ describe('Sequelize-Redis-Cache', () => {
       },
     });
 
-    isCached.should.equal(false);
-    should.exist(res);
-    res.should.have.property('count', 1);
-    res.should.have.property('rows');
-    res.rows.length.should.equal(1);
-    res.rows[0].get('username').should.equal('idan');
+    expect(isCached).toEqual(false);
+    expect(res.count).toEqual(1);
+    expect(res.rows).not.toBe(null);
+    expect(res.rows.length).toEqual(1);
+    expect(res.rows[0].get('username')).toEqual('idan');
   });
 
   it('should findAndCountAll from cache', async () => {
+    expect.assertions(5);
+
     const [res, isCached] = await UserCacher.findAndCountAllCached(cacheKey, {
       where: {
         username: 'idan',
       },
     });
 
-    isCached.should.equal(true);
-    should.exist(res);
-    res.should.have.property('count', 1);
-    res.should.have.property('rows');
-    res.rows.length.should.equal(1);
-    res.rows[0].get('username').should.equal('idan');
+    expect(isCached).toEqual(true);
+    expect(res.count).toEqual(1);
+    expect(res.rows).not.toBe(null);
+    expect(res.rows.length).toEqual(1);
+    expect(res.rows[0].get('username')).toEqual('idan');
   });
 
   it('should count from db', async () => {
+    expect.assertions(2);
+
     redisClient.del(cacheKey);
     const [res, isCached] = await UserCacher.countCached(cacheKey, {
       where: {
@@ -285,71 +295,84 @@ describe('Sequelize-Redis-Cache', () => {
       },
     });
 
-    isCached.should.equal(false);
-    should.exist(res);
-    res.should.equal(1);
+    expect(isCached).toEqual(false);
+    expect(res).toEqual(1);
   });
 
   it('should count from cache', async () => {
+    expect.assertions(2);
+
     const [res, isCached] = await UserCacher.countCached(cacheKey, {
       where: {
         username: 'idan',
       },
     });
 
-    isCached.should.equal(true);
-    should.exist(res);
-    res.should.equal(1);
+    expect(isCached).toEqual(true);
+
+    expect(res).toEqual(1);
   });
 
   it('should sum from db', async () => {
+    expect.assertions(2);
+
     redisClient.del(cacheKey);
     const [res, isCached] = await UserCacher.sumCached(cacheKey, 'id');
 
-    isCached.should.equal(false);
-    should.exist(res);
-    res.should.equal(3); // user id 1 + user id 2 = 3
+    expect(isCached).toEqual(false);
+
+    expect(res).toEqual(3); // user id 1 + user id 2 = 3
   });
 
   it('should sum from cache', async () => {
+    expect.assertions(2);
+
     const [res, isCached] = await UserCacher.sumCached(cacheKey, 'id');
 
-    isCached.should.equal(true);
-    should.exist(res);
-    res.should.equal(3); // user id 1 + user id 2 = 3
+    expect(isCached).toEqual(true);
+
+    expect(res).toEqual(3); // user id 1 + user id 2 = 3
   });
 
   it('should max from db', async () => {
+    expect.assertions(2);
+
     redisClient.del(cacheKey);
     const [res, isCached] = await UserCacher.maxCached(cacheKey, 'id');
 
-    isCached.should.equal(false);
-    should.exist(res);
-    res.should.equal(2); // user id 2
+    expect(isCached).toEqual(false);
+
+    expect(res).toEqual(2); // user id 2
   });
 
   it('should max from cache', async () => {
+    expect.assertions(2);
+
     const [res, isCached] = await UserCacher.maxCached(cacheKey, 'id');
 
-    isCached.should.equal(true);
-    should.exist(res);
-    res.should.equal(2); // user id 2
+    expect(isCached).toEqual(true);
+
+    expect(res).toEqual(2); // user id 2
   });
 
   it('should min from db', async () => {
+    expect.assertions(2);
+
     redisClient.del(cacheKey);
     const [res, isCached] = await UserCacher.minCached(cacheKey, 'id');
 
-    isCached.should.equal(false);
-    should.exist(res);
-    res.should.equal(1); // user id 1
+    expect(isCached).toEqual(false);
+
+    expect(res).toEqual(1); // user id 1
   });
 
   it('should min from cache', async () => {
+    expect.assertions(2);
+
     const [res, isCached] = await UserCacher.minCached(cacheKey, 'id');
 
-    isCached.should.equal(true);
-    should.exist(res);
-    res.should.equal(1); // user id 1
+    expect(isCached).toEqual(true);
+
+    expect(res).toEqual(1); // user id 1
   });
 });
