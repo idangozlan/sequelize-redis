@@ -4,7 +4,7 @@
   "description": "A semi-automatic caching wrapper for Sequelize NodeJS framework",
   "homepage": "https://github.com/idangozlan/sequelize-redis",
   "license": "MIT",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "main": "lib/index.js",
   "dependencies": {
     "json-buffer": "^3.0.0"

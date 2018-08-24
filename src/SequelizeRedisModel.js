@@ -54,8 +54,10 @@ export default class SequelizeRedisModel {
       try {
         // console.log('From Cache');
         let result;
-        if (Array.isArray(parsed)) {
-          result = parsed.map(parsedObject => this.model.build(parsedObject));
+        const [queryOptions] = args;
+
+        if (queryOptions && !!queryOptions.raw) {
+          result = parsed;
         } else if (parsed.rows) {
           result = {
             ...parsed,
@@ -63,16 +65,17 @@ export default class SequelizeRedisModel {
           };
         } else if (typeof parsed === 'number') {
           result = parsed;
-        } else {
-          const [queryOptiosn] = args;
+        } else if (queryOptions) {
           const buildOptions = {
-            raw: !!queryOptiosn.raw,
-            isNewRecord: !!queryOptiosn.isNewRecord,
+            raw: !!queryOptions.raw,
+            isNewRecord: !!queryOptions.isNewRecord,
           };
-          if (queryOptiosn.include) {
-            buildOptions.include = queryOptiosn.include;
+          if (queryOptions.include) {
+            buildOptions.include = queryOptions.include;
           }
           result = this.model.build(parsed, buildOptions);
+        } else {
+          result = this.model.build(parsed);
         }
 
         return [result, true];
@@ -90,7 +93,7 @@ export default class SequelizeRedisModel {
       // Array for findAll, result.rows for findAndCountAll, typeof number for count/max/sum/etc
       toCache = result;
     } else if (result.toString().includes(('[object SequelizeInstance'))) {
-      toCache = result.get({ plain: true });
+      toCache = result;
     } else {
       throw new Error(`Unkown result type: ${typeof result}`);
     }

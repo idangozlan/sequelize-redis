@@ -13,12 +13,14 @@ bluebird.promisifyAll(redis.Multi.prototype);
 
 const db = {
   host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || 3306,
   database: process.env.DB_NAME || 'tests',
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASS || '',
 };
 const sequelizeOpts = {
   host: db.host,
+  port: db.port,
   dialect: process.env.DB_DIALECT || 'mysql',
   logging: !!process.env.DB_LOG,
   operatorsAliases: Sequelize.Op,
@@ -125,6 +127,16 @@ describe('Sequelize-Redis-Cache', () => {
     user.get('username').should.equal('idan');
   });
 
+  it('should fetch users from database with raw:true option', async () => {
+    redisClient.del(cacheKey);
+    const [users, isCached] = await UserCacher.findAllCached(cacheKey, { raw: true });
+    should.exist(users);
+    users.length.should.equal(2);
+    isCached.should.equal(false);
+    users.toString().includes(('[object SequelizeInstance')).should.equal(false);
+    console.log(users);
+  });
+
   it('should fetch user from database with cached Sequelize model with original method', async () => {
     const user = await UserCacher.findById(1);
     should.exist(user);
@@ -186,6 +198,24 @@ describe('Sequelize-Redis-Cache', () => {
     users[1].get('username').should.equal('idan2');
   });
 
+  it('should fetch users from db and spread associations into JSON', async () => {
+    redisClient.del(cacheKey);
+    const [users, isCached] = await UserCacher.findAllCached(cacheKey, { include: [GitHubUser] });
+    should.exist(users);
+    users.length.should.equal(2);
+    isCached.should.equal(false);
+    users[0].githubUser.username.should.equal('idangozlan');
+    users[0].githubUser.get('username').should.equal('idangozlan');
+  });
+
+  it('should fetch users from cache with spreaded associations', async () => {
+    const [users, isCached] = await UserCacher.findAllCached(cacheKey, { include: [GitHubUser] });
+    should.exist(users);
+    users.length.should.equal(2);
+    isCached.should.equal(true);
+    users[0].githubUser.username.should.equal('idangozlan');
+    users[0].githubUser.get('username').should.equal('idangozlan');
+  });
 
   it('should fetch user with includes from database', async () => {
     redisClient.del(cacheKey);
