@@ -54,27 +54,28 @@ export default class SequelizeRedisModel {
       try {
         // console.log('From Cache');
         let result;
-        if (parsed.rows) {
+        const [queryOptions] = args;
+
+        if (queryOptions && !!queryOptions.raw) {
+          result = parsed;
+        } else if (parsed.rows) {
           result = {
             ...parsed,
             rows: parsed.rows.map(parsedRow => this.model.build(parsedRow)),
           };
         } else if (typeof parsed === 'number') {
           result = parsed;
-        } else {
-          const [queryOptions] = args;
-          if (queryOptions) {
-            const buildOptions = {
-              raw: !!queryOptions.raw || false,
-              isNewRecord: !!queryOptions.isNewRecord || false,
-            };
-            if (queryOptions.include) {
-              buildOptions.include = queryOptions.include;
-            }
-            result = this.model.build(parsed, buildOptions);
-          } else {
-            result = this.model.build(parsed);
+        } else if (queryOptions) {
+          const buildOptions = {
+            raw: !!queryOptions.raw,
+            isNewRecord: !!queryOptions.isNewRecord,
+          };
+          if (queryOptions.include) {
+            buildOptions.include = queryOptions.include;
           }
+          result = this.model.build(parsed, buildOptions);
+        } else {
+          result = this.model.build(parsed);
         }
 
         return [result, true];

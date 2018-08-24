@@ -133,8 +133,8 @@ describe('Sequelize-Redis-Cache', () => {
     should.exist(users);
     users.length.should.equal(2);
     isCached.should.equal(false);
-    users[0].username.should.equal('idan');
-    users[1].username.should.equal('idan2');
+    users.toString().includes(('[object SequelizeInstance')).should.equal(false);
+    console.log(users);
   });
 
   it('should fetch user from database with cached Sequelize model with original method', async () => {
