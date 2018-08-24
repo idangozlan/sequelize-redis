@@ -1,11 +1,12 @@
 {
   "extends": "eslint-config-airbnb-base",
   "env": {
+    "jest/globals": true,
     "node": true,
     "mocha": true
   },
   "rules": {
-    "import/no-extraneous-dependencies": ["error", {"devDependencies": ["src/test/**/*.js"]}],
+    "import/no-extraneous-dependencies": ["error", {"devDependencies": ["src/__tests__/**/*.js"]}],
     "max-len": ["error", {
       "code": 120,
       "ignoreComments": true,
@@ -17,7 +18,7 @@
     }],
   },
   "plugins": [
-    "import"
+    "import", "jest"
   ],
   "parser": "babel-eslint",
   "parserOptions": {
