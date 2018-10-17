@@ -10,7 +10,6 @@ runDotenv(); // to run with .env file for local env vars
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
 
-
 const db = {
   host: process.env.DB_HOST || 'localhost',
   port: process.env.DB_PORT || 3306,
@@ -134,7 +133,6 @@ describe('Sequelize-Redis-Cache', () => {
     users.length.should.equal(2);
     isCached.should.equal(false);
     users.toString().includes(('[object SequelizeInstance')).should.equal(false);
-    console.log(users);
   });
 
   it('should fetch user from database with cached Sequelize model with original method', async () => {
@@ -212,6 +210,15 @@ describe('Sequelize-Redis-Cache', () => {
     const [users, isCached] = await UserCacher.findAllCached(cacheKey, { include: [GitHubUser] });
     should.exist(users);
     users.length.should.equal(2);
+    isCached.should.equal(true);
+    users[0].githubUser.username.should.equal('idangozlan');
+    users[0].githubUser.get('username').should.equal('idangozlan');
+  });
+
+  it('should fetch users from cache with offset and limit', async () => {
+    const [users, isCached] = await UserCacher.findAllCached(cacheKey, { include: [GitHubUser], offset: 0, limit: 1 });
+    should.exist(users);
+    users.length.should.equal(1);
     isCached.should.equal(true);
     users[0].githubUser.username.should.equal('idangozlan');
     users[0].githubUser.get('username').should.equal('idangozlan');
