@@ -79,7 +79,7 @@ export default class SequelizeRedisModel {
           if (queryOptions.offset || queryOptions.limit) {
             const offset = queryOptions.offset || 0;
             const limit = queryOptions.limit || result.length;
-            result = result.slice(offset, limit);
+            result = result.splice(offset, limit);
           }
 
         } else {

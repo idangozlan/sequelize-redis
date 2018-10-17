@@ -216,12 +216,13 @@ describe('Sequelize-Redis-Cache', () => {
   });
 
   it('should fetch users from cache with offset and limit', async () => {
-    const [users, isCached] = await UserCacher.findAllCached(cacheKey, { include: [GitHubUser], offset: 0, limit: 1 });
+    const limit = 1;
+    const [users, isCached] = await UserCacher.findAllCached(cacheKey, { offset: 1, limit });
     should.exist(users);
-    users.length.should.equal(1);
+    users.length.should.equal(limit);
     isCached.should.equal(true);
-    users[0].githubUser.username.should.equal('idangozlan');
-    users[0].githubUser.get('username').should.equal('idangozlan');
+    users[0].username.should.equal('idan2');
+    users[0].get('username').should.equal('idan2');
   });
 
   it('should fetch user with includes from database', async () => {
