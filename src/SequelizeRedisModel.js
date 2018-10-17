@@ -58,6 +58,9 @@ export default class SequelizeRedisModel {
 
         if (queryOptions && !!queryOptions.raw) {
           result = parsed;
+          if (queryOptions.offset || queryOptions.limit) {
+            result = result.splice(queryOptions.offset || 0, queryOptions.limit || result.length);
+          }
         } else if (parsed.rows) {
           result = {
             ...parsed,
@@ -77,12 +80,11 @@ export default class SequelizeRedisModel {
           result = this.model.build(parsed, buildOptions);
           
           if (queryOptions.offset || queryOptions.limit) {
-            const offset = queryOptions.offset || 0;
-            const limit = queryOptions.limit || result.length;
-            result = result.splice(offset, limit);
+            result = result.splice(queryOptions.offset || 0, queryOptions.limit || result.length);
           }
 
         } else {
+          
           result = this.model.build(parsed);
         }
 

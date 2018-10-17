@@ -215,6 +215,7 @@ describe('Sequelize-Redis-Cache', () => {
     users[0].githubUser.get('username').should.equal('idangozlan');
   });
 
+
   it('should fetch users from cache with offset and limit', async () => {
     const limit = 1;
     const [users, isCached] = await UserCacher.findAllCached(cacheKey, { offset: 1, limit });
@@ -223,6 +224,15 @@ describe('Sequelize-Redis-Cache', () => {
     isCached.should.equal(true);
     users[0].username.should.equal('idan2');
     users[0].get('username').should.equal('idan2');
+  });
+
+  it('should fetch users from cache with offset and limit with raw', async () => {
+    const limit = 1;
+    const [users, isCached] = await UserCacher.findAllCached(cacheKey, { raw: true, offset: 1, limit });
+    should.exist(users);
+    users.length.should.equal(limit);
+    isCached.should.equal(true);
+    users[0].username.should.equal('idan2');
   });
 
   it('should fetch user with includes from database', async () => {
