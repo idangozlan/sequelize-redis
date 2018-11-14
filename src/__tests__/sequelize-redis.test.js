@@ -113,7 +113,7 @@ describe('Sequelize-Redis-Cache', () => {
   it('should fetch user from database with original Sequelize model', async () => {
     expect.assertions(1);
 
-    const user = await User.findById(1);
+    const user = await User.findByPk(1);
     expect(user.get('username')).toEqual('idan');
   });
 
@@ -131,7 +131,7 @@ describe('Sequelize-Redis-Cache', () => {
   it('should fetch user from database with cached Sequelize model with original method', async () => {
     expect.assertions(1);
 
-    const user = await UserCacher.findById(1);
+    const user = await UserCacher.findByPk(1);
     expect(user.get('username')).toEqual('idan');
   });
 
@@ -139,7 +139,7 @@ describe('Sequelize-Redis-Cache', () => {
     expect.assertions(2);
 
     redisClient.del(cacheKey);
-    const [user, isCached] = await UserCacher.findByIdCached(cacheKey, 1);
+    const [user, isCached] = await UserCacher.findByPkCached(cacheKey, 1);
 
     expect(isCached).toEqual(false);
     expect(user.get('username')).toEqual('idan');
@@ -148,7 +148,7 @@ describe('Sequelize-Redis-Cache', () => {
   it('should fetch user from cache', async () => {
     expect.assertions(2);
 
-    const [user, isCached] = await UserCacher.findByIdCached(cacheKey, 1);
+    const [user, isCached] = await UserCacher.findByPkCached(cacheKey, 1);
 
     expect(isCached).toEqual(true);
     expect(user.get('username')).toEqual('idan');
@@ -158,7 +158,7 @@ describe('Sequelize-Redis-Cache', () => {
     expect.assertions(2);
 
     await (new Promise(resolveTimeout => setTimeout(resolveTimeout, userTTL * 1000)));
-    const [user, isCached] = await UserCacher.findByIdCached(cacheKey, 1);
+    const [user, isCached] = await UserCacher.findByPkCached(cacheKey, 1);
     try {
       expect(isCached).toEqual(false);
       expect(user.get('username')).toEqual('idan');
@@ -172,7 +172,7 @@ describe('Sequelize-Redis-Cache', () => {
   it('should fetch empty res with not cached flag', async () => {
     expect.assertions(2);
 
-    const [user, isCached] = await UserCacher.findByIdCached('user_3', 3);
+    const [user, isCached] = await UserCacher.findByPkCached('user_3', 3);
     expect(user).toBe(null);
     expect(isCached).toEqual(false);
   });
