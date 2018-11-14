@@ -7,6 +7,7 @@ const methods = [
   'findAndCount',
   'findAndCountAll',
   'findById',
+  'findByPk',
   'all',
   'min',
   'max',
