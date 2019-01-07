@@ -1,6 +1,6 @@
-import SequelizeRedisModel from './SequelizeRedisModel';
+const SequelizeRedisModel = require('./SequelizeRedisModel');
 
-export default class SequelizeRedis {
+module.exports = class SequelizeRedis {
   constructor(redisClient, options = {}) {
     this.redisClient = redisClient;
     this.options = options;
@@ -9,4 +9,4 @@ export default class SequelizeRedis {
   getModel(model, options = {}) {
     return (new SequelizeRedisModel(model, this.redisClient, { ...this.options, ...options }));
   }
-}
+};
