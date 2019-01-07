@@ -20,13 +20,6 @@
   "plugins": [
     "import", "jest"
   ],
-  "parserOptions": {
-    "ecmaVersion": 2017,
-    "sourceType": "module",
-    "ecmaFeatures": {
-      "experimentalObjectRestSpread": true
-    }
-  },
   "globals": {
     "__DEVELOPMENT__": true
   }

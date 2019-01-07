@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const bluebird = require('bluebird');
 const redis = require('redis');
 const Sequelize = require('sequelize');
