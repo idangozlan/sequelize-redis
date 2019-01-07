@@ -1,14 +1,9 @@
-const dotenv = require('dotenv');
-const bluebird = require('bluebird');
-const redis = require('redis-mock');
-const Sequelize = require('sequelize');
-const SequelizeRedis = require('..');
+import { config as runDotenv } from 'dotenv';
+import Sequelize from 'sequelize';
+import redisClient from '../../jest/redisClient';
+import SequelizeRedis from '../index';
 
-/* Promisify Redis */
-const redisClient = redis.createClient();
-bluebird.promisifyAll(redisClient);
-
-dotenv.config(); // to run with .env file for local env vars
+runDotenv(); // to run with .env file for local env vars
 
 const db = {
   host: process.env.DB_HOST || 'localhost',
