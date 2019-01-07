@@ -1,2 +1,4 @@
 lib/**
 coverage/**
+
+*.es5.js
