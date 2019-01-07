@@ -51,13 +51,13 @@ The second argument of `getModel` is optional:
 const userUUID = '75292c75-4c7a-4a11-92ac-57f929f50e23';
 const userCacheKey = `user_${userUUID}`;
 // We can use the default sequelize methods by adding suffix of "Cached" 
-// for example, findByIdCached: 
-const [user, cacheHit] = await User.findByIdCached(userCacheKey, userUUID);
+// for example, findbyPkCached: 
+const [user, cacheHit] = await User.findbyPkCached(userCacheKey, userUUID);
 // We can also use the non cached methods (original methods)
-const user = await User.findById(userUUID);
+const user = await User.findbyPk(userUUID);
 ```
 
-Results of Cached methods (for ex. `findByIdCached`) will be array with following arguments: 
+Results of Cached methods (for ex. `findbyPkCached`) will be array with following arguments: 
 1. Sequelize response (same as on original method)
 2. Cache hit indication (`true` / `false`)
 
@@ -68,7 +68,7 @@ Supported Methods:
   `findAll`
   `findAndCount`
   `findAndCountAll`
-  `findById`
+  `findbyPk`
   `all`
   `min`
   `max`

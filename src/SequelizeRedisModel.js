@@ -1,4 +1,4 @@
-import { stringify, parse } from 'json-buffer';
+const { stringify, parse } = require('json-buffer');
 
 const methods = [
   'find',
@@ -15,7 +15,7 @@ const methods = [
   'count',
 ];
 
-export default class SequelizeRedisModel {
+module.exports = class SequelizeRedisModel {
   constructor(model, redisPromisifiedClient, options = {}) {
     this.options = {
       ...options,
@@ -107,4 +107,4 @@ export default class SequelizeRedisModel {
 
     return [result, false];
   }
-}
+};
