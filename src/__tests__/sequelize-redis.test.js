@@ -34,7 +34,9 @@ describe('Sequelize-Redis-Cache', () => {
   let User;
   let GitHubUser;
   let UserCacher;
+  let GitHubUserCacher;
   const cacheKey = 'test';
+  const cacheKeyGitUser = 'test2';
   const userTTL = 1; // seconds
 
   beforeAll(async () => {
@@ -54,11 +56,10 @@ describe('Sequelize-Redis-Cache', () => {
           allowNull: false,
           type: Sequelize.STRING,
         },
-        createdAt: Sequelize.DATE,
-        updatedAt: Sequelize.DATE,
       },
       {
         tableName: 'User',
+        timestamps: true,
       },
     );
 
@@ -71,16 +72,15 @@ describe('Sequelize-Redis-Cache', () => {
           type: Sequelize.STRING,
           primaryKey: true,
         },
-        createdAt: Sequelize.DATE,
-        updatedAt: Sequelize.DATE,
       },
       {
         tableName: 'GitHubUser',
+        timestamps: true,
+        createdAt: 'myCustomDate',
       },
     );
     GitHubUser.belongsTo(User, { foreignKey: 'userId' });
     User.hasOne(GitHubUser, { foreignKey: 'userId' });
-
 
     try {
       await sequelize.sync({ force: true });
@@ -104,6 +104,7 @@ describe('Sequelize-Redis-Cache', () => {
     const sequelizeCacher = new SequelizeRedis(redisClient);
 
     UserCacher = sequelizeCacher.getModel(User, { ttl: userTTL });
+    GitHubUserCacher = sequelizeCacher.getModel(GitHubUser, { ttl: userTTL });
   });
 
   afterAll(async () => {
@@ -191,7 +192,6 @@ describe('Sequelize-Redis-Cache', () => {
 
   it('should fetch users from cache', async () => {
     expect.assertions(4);
-
     const [users, isCached] = await UserCacher.findAllCached(cacheKey);
 
     expect(users.length).toEqual(2);
@@ -221,6 +221,31 @@ describe('Sequelize-Redis-Cache', () => {
     expect(isCached).toEqual(true);
     expect(users[0].githubUser.username).toEqual('idangozlan');
     expect(users[0].githubUser.get('username')).toEqual('idangozlan');
+  });
+
+  it('should return the cached data to an instance with timestamps', async () => {
+    expect.assertions(3);
+
+    const [users, isCached] = await UserCacher.findAllCached(cacheKey, { include: [GitHubUser] });
+    const date = new Date(users[0].get('createdAt'));
+
+    expect(isCached).toEqual(true);
+    expect(date instanceof Date).toBeTruthy();
+    expect(date.valueOf()).not.toBeNaN();
+  });
+
+  it('should return the cached data to an instance with timestamps with renamed timestamp fields', async () => {
+    expect.assertions(3);
+
+    redisClient.del(cacheKeyGitUser);
+    await GitHubUserCacher.findOneCached(cacheKeyGitUser); // write to cache
+    const [user, isCached] = await GitHubUserCacher.findOneCached(cacheKeyGitUser); // fetch from cache
+
+    const date = new Date(user.get('myCustomDate'));
+
+    expect(isCached).toEqual(true);
+    expect(date instanceof Date).toBeTruthy();
+    expect(date.valueOf()).not.toBeNaN();
   });
 
   it('should fetch user with includes from database', async () => {
