@@ -23,10 +23,36 @@ module.exports = class SequelizeRedisModel {
 
     this.model = model;
     this.redisClient = redisPromisifiedClient;
+
     methods.forEach((method) => {
       this[`${method}Cached`] = async (cacheKey, ...args) => this.run(cacheKey, method, ...args);
       this[method] = async (...args) => this.model[method](...args);
     });
+  }
+
+  $build(values, options) {
+    const model = this.model.build(values, {
+      ...options,
+      raw: options.raw || true,
+      include: options.include || [],
+    });
+
+    if (this.model.options.timestamps === true && options && options.isNewRecord === false) {
+      // get the fields being used for timestamps
+      const fields = Object.keys(this.model._timestampAttributes).map(key => this.model._timestampAttributes[key]); // eslint-disable-line no-underscore-dangle
+
+      // iterate over them and get the value from cached data
+      fields.forEach((field) => {
+        if (typeof values[field] !== 'undefined') {
+          model.dataValues[field] = values[field];
+        }
+      });
+
+      model._changed = {}; // eslint-disable-line no-underscore-dangle
+      model._previousDataValues = Object.assign({}, model.dataValues); // eslint-disable-line no-underscore-dangle
+    }
+
+    return model;
   }
 
   async run(cacheKey, method, ...args) {
@@ -62,21 +88,21 @@ module.exports = class SequelizeRedisModel {
         } else if (parsed.rows) {
           result = {
             ...parsed,
-            rows: parsed.rows.map(parsedRow => this.model.build(parsedRow)),
+            rows: parsed.rows.map(parsedRow => this.$build(parsedRow, { isNewRecord: false })),
           };
         } else if (typeof parsed === 'number') {
           result = parsed;
         } else if (queryOptions) {
           const buildOptions = {
             raw: !!queryOptions.raw,
-            isNewRecord: !!queryOptions.isNewRecord,
+            isNewRecord: false, // forced false since we're already pulling from cache, so it means already was persisted to DB previously
           };
           if (queryOptions.include) {
             buildOptions.include = queryOptions.include;
           }
-          result = this.model.build(parsed, buildOptions);
+          result = this.$build(parsed, buildOptions);
         } else {
-          result = this.model.build(parsed);
+          result = this.$build(parsed, { isNewRecord: false });
         }
 
         return [result, true];
