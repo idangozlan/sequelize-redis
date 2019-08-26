@@ -13,7 +13,7 @@
     "json-buffer": "^3.0.1",
     "mysql2": "^1.6.4",
     "redis": "^2.8.0",
-    "sequelize": "^4.42.0"
+    "sequelize": "^4.44.3"
   },
   "devDependencies": {
     "@babel/cli": "^7.2.3",
