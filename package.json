@@ -13,7 +13,8 @@
     "json-buffer": "^3.0.1",
     "mysql2": "^1.6.4",
     "redis": "^2.8.0",
-    "sequelize": "^4.42.0"
+    "sequelize": "^4.42.0",
+    "snyk": "^1.317.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.2.3",
@@ -40,11 +41,13 @@
   },
   "scripts": {
     "build": "npm run clean:build && babel ./src --out-dir ./lib --ignore src/**/*.test.js && babel ./example/app.js --out-file ./example/app.es5.js",
-    "prepublish": "npm run build",
+    "prepublish": "npm run snyk-protect && npm run build",
     "clean:build": "rimraf lib",
     "lint": "eslint -c .eslintrc . --fix",
     "test": "jest",
     "precommit": "npm run lint",
-    "update": "ncu -a -u -x \"\""
-  }
+    "update": "ncu -a -u -x \"\"",
+    "snyk-protect": "snyk protect"
+  },
+  "snyk": true
 }
